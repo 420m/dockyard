@@ -1,0 +1,34 @@
+version: '2'
+services:
+  transmission:
+    image: linuxserver/transmission
+    ports:
+     - "9091:9091"
+     - "51413:51413"
+     - "51413:51413/udp"
+    volumes:
+     - /etc/localtime:/etc/localtime:ro
+     - /home/sonarr/transmission/config/:/config
+     - /home/sonarr/transmission/downloads/:/downloads
+  sonarr:
+    image: linuxserver/sonarr
+    ports:
+     - "8989:8989"
+    volumes:
+     - /dev/rtc:/dev/rtc:ro
+     - /home/sonarr/sonarr/series:/tv
+     - /home/sonarr/sonarr/config:/config
+     - /home/sonarr/transmission/downloads/:/downloads
+    depends_on:
+     - transmission
+  couchpotato:
+    image: linuxserver/couchpotato
+    ports:
+     - "5050:5050"
+    volumes:
+     - /etc/localtime:/etc/localtime:ro
+     - /home/sonarr/couchpotato/movies:/movies
+     - /home/sonarr/couchpotato/config/:/config
+     - /home/sonarr/transmission/downloads/:/downloads
+    depends_on:
+     - transmission
