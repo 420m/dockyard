@@ -9,6 +9,9 @@ services:
      - "9091:9091"
      - "51413:51413"
      - "51413:51413/udp"
+    environment:
+     - PGID=${PGID}
+     - PUID=${PUID}
     volumes:
      - /etc/localtime:/etc/localtime:ro
      - /home/media/transmission/config/:/config
@@ -19,6 +22,9 @@ services:
     restart: always
     ports:
      - "8989:8989"
+    environment:
+     - PGID=${PGID}
+     - PUID=${PUID}
     volumes:
      - /dev/rtc:/dev/rtc:ro
      - /home/media/sonarr/series:/tv
@@ -32,6 +38,9 @@ services:
     restart: always
     ports:
      - "5050:5050"
+    environment:
+     - PGID=${PGID}
+     - PUID=${PUID}
     volumes:
      - /etc/localtime:/etc/localtime:ro
      - /home/media/couchpotato/movies:/movies
