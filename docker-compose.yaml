@@ -1,7 +1,10 @@
 version: '2'
+
 services:
+
   transmission:
     image: linuxserver/transmission
+    restart: always
     ports:
      - "9091:9091"
      - "51413:51413"
@@ -10,8 +13,10 @@ services:
      - /etc/localtime:/etc/localtime:ro
      - /home/media/transmission/config/:/config
      - /home/media/transmission/downloads/:/downloads
+
   sonarr:
     image: linuxserver/sonarr
+    restart: always
     ports:
      - "8989:8989"
     volumes:
@@ -21,8 +26,10 @@ services:
      - /home/media/transmission/downloads/:/downloads
     depends_on:
      - transmission
+
   couchpotato:
     image: linuxserver/couchpotato
+    restart: always
     ports:
      - "5050:5050"
     volumes:
