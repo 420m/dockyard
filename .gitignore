@@ -99,3 +99,10 @@ Session.vim
 *~
 # auto-generated tag files
 tags
+
+## Service generated files ##
+conf/transmission/
+!conf/transmission/settings.json
+conf/sonarr/
+!conf/sonarr/config.xml
+conf/couchpotato/data/

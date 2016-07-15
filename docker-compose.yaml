@@ -14,8 +14,9 @@ services:
      - PUID=${PUID}
     volumes:
      - /etc/localtime:/etc/localtime:ro
-     - /home/media/transmission/config/:/config
-     - /home/media/transmission/downloads/:/downloads
+     - ./conf/transmission/:/config
+     - ./media/transmission/downloads/:/downloads
+     - ./media/transmission/torrent_files/:/watch
 
   sonarr:
     image: linuxserver/sonarr
@@ -27,10 +28,10 @@ services:
      - PUID=${PUID}
     volumes:
      - /dev/rtc:/dev/rtc:ro
-     - /home/media/sonarr/series:/tv
-     - /home/media/sonarr/config:/config
-     - /home/media/transmission/downloads/:/downloads
-    depends_on:
+     - ./media/sonarr/series:/tv
+     - ./conf/sonarr/:/config
+     - ./media/transmission/downloads/:/downloads
+    links:
      - transmission
 
   couchpotato:
@@ -43,8 +44,8 @@ services:
      - PUID=${PUID}
     volumes:
      - /etc/localtime:/etc/localtime:ro
-     - /home/media/couchpotato/movies:/movies
-     - /home/media/couchpotato/config/:/config
-     - /home/media/transmission/downloads/:/downloads
-    depends_on:
+     - ./media/couchpotato/movies:/movies
+     - ./conf/couchpotato/:/config
+     - ./media/transmission/downloads/:/downloads
+    links:
      - transmission
