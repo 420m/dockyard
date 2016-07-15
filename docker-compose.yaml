@@ -7,7 +7,7 @@ services:
     networks:
      - mediaserver-net
     ports:
-     - "8080:80"
+     - "8080:8080"
      # For HTTPs access
      # - "443:443"
     volumes:
@@ -20,6 +20,7 @@ services:
      - transmission
      - sonarr
      - couchpotato
+     - plex
 
   transmission:
     image: linuxserver/transmission
@@ -69,6 +70,29 @@ services:
      - ./media/transmission/downloads/:/downloads
     links:
      - transmission
+
+  plex:
+    image: linuxserver/plex
+    restart: always
+    networks:
+     - mediaserver-net
+    hostname: plex
+    environment:
+     - PGID=${PGID}
+     - PUID=${PUID}
+     - VERSION=latest
+    ports:
+     - "32400:32400"
+     - "32400:32400/udp"
+     - "32469:32469"
+     - "32469:32469/udp"
+     # We don't require Network discovery on PROD
+     # - "5353:5353/udp"
+     - "1900:1900/udp"
+    volumes:
+     - ./media/plex:/config
+     - ./media/sonarr/series:/data/tvshows
+     - ./media/couchpotato/movies:/data/movies
 
 networks:
   mediaserver-net:

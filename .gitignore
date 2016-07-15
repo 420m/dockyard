@@ -106,3 +106,6 @@ conf/transmission/
 conf/sonarr/
 !conf/sonarr/config.xml
 conf/couchpotato/data/
+
+# Our media files
+media/**/*
