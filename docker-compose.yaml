@@ -1,14 +1,32 @@
 version: '2'
 
 services:
+  reverse-proxy:
+    image: nginx:alpine
+    restart: always
+    networks:
+     - mediaserver-net
+    ports:
+     - "8080:80"
+     # For HTTPs access
+     # - "443:443"
+    volumes:
+     - ./conf/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+     # For HTTPs access
+     # - ./conf/nginx/server-cert.pem://etc/ssl/certs/server-cert.pem:ro
+     # - ./conf/nginx/server-key.pem://etc/ssl/certs/server-key.pem:ro
+     # - ./conf/nginx/dhparam.pem://etc/ssl/certs/dhparam.pem:ro
+    links:
+     - transmission
+     - sonarr
+     - couchpotato
 
   transmission:
     image: linuxserver/transmission
     restart: always
-    ports:
-     - "9091:9091"
-     - "51413:51413"
-     - "51413:51413/udp"
+    networks:
+     - mediaserver-net
+    hostname: transmission
     environment:
      - PGID=${PGID}
      - PUID=${PUID}
@@ -21,8 +39,9 @@ services:
   sonarr:
     image: linuxserver/sonarr
     restart: always
-    ports:
-     - "8989:8989"
+    networks:
+     - mediaserver-net
+    hostname: sonarr
     environment:
      - PGID=${PGID}
      - PUID=${PUID}
@@ -37,8 +56,9 @@ services:
   couchpotato:
     image: linuxserver/couchpotato
     restart: always
-    ports:
-     - "5050:5050"
+    networks:
+     - mediaserver-net
+    hostname: couchpotato
     environment:
      - PGID=${PGID}
      - PUID=${PUID}
@@ -49,3 +69,7 @@ services:
      - ./media/transmission/downloads/:/downloads
     links:
      - transmission
+
+networks:
+  mediaserver-net:
+    driver: bridge
