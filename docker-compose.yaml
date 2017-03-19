@@ -18,41 +18,39 @@ services:
       - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
       - "traefik.port=9091"
 
-  # sonarr:
-  #   image: linuxserver/sonarr
-  #   networks:
-  #     - web
-  #   ports:
-  #     - "8989:8989"
-  #   volumes:
-  #     - /dev/rtc:/dev/rtc:ro
-  #     - /home/media/sonarr/series:/tv
-  #     - /home/media/sonarr/config:/config
-  #     - /home/media/transmission/downloads/:/downloads
-  #   labels:
-  #       - "traefik.backend=transmission"
-  #       # - "traefik.frontend.rule=Host:localhost;Path:/transmission"
-  #       - "traefik.port=8989"
-  #   depends_on:
-  #     - transmission
+  sonarr:
+    image: linuxserver/sonarr
+    networks:
+      - web
+    volumes:
+      - /dev/rtc:/dev/rtc:ro
+      - /home/media/sonarr/series:/tv
+      - /home/media/sonarr/config:/config
+      - /home/media/transmission/downloads/:/downloads
+    labels:
+        - "traefik.backend=sonarr"
+        - "traefik.frontend.rule=Host:sonarr.docker.localhost"
+        - "traefik.port=8989"
+    depends_on:
+      - transmission
 
-  # couchpotato:
-  #   image: linuxserver/couchpotato
-  #   networks:
-  #     - web
-  #   # ports:
-  #   #   - "5050:5050"
-  #   volumes:
-  #     - /etc/localtime:/etc/localtime:ro
-  #     - /home/media/couchpotato/movies:/movies
-  #     - /home/media/couchpotato/config/:/config
-  #     - /home/media/transmission/downloads/:/downloads
-  #   labels:
-  #   #     - "traefik.backend=transmission"
-  #       # - "traefik.frontend.rule=Host:transmission.haissamkaj.com"
-  #       - "traefik.port=5050"
-  #   depends_on:
-  #     - transmission
+  couchpotato:
+    image: linuxserver/couchpotato
+    networks:
+      - web
+    # ports:
+    #   - "5050:5050"
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /home/media/couchpotato/movies:/movies
+      - /home/media/couchpotato/config/:/config
+      - /home/media/transmission/downloads/:/downloads
+    labels:
+        - "traefik.backend=couchpotato"
+        - "traefik.frontend.rule=Host:couchpotato.docker.localhost"
+        - "traefik.port=5050"
+    depends_on:
+      - transmission
 
 networks:
   web:
