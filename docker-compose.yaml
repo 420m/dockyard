@@ -29,7 +29,7 @@ services:
       - /home/media/transmission/downloads/:/downloads
     labels:
         - "traefik.backend=sonarr"
-        - "traefik.frontend.rule=Host:sonarr.docker.localhost"
+        - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
         - "traefik.port=8989"
     depends_on:
       - transmission
@@ -47,7 +47,7 @@ services:
       - /home/media/transmission/downloads/:/downloads
     labels:
         - "traefik.backend=couchpotato"
-        - "traefik.frontend.rule=Host:couchpotato.docker.localhost"
+        - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
         - "traefik.port=5050"
     depends_on:
       - transmission
