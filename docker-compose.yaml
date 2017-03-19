@@ -15,9 +15,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.backend=transmission"
-      # - "traefik.frontend.rule=PathPrefix:/transmission/"
-      # - "traefik.frontend.rule=Host:transmission"
-      - "traefik.frontend.rule=Host:transmission.docker.localhost"
+      - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
       - "traefik.port=9091"
 
   # sonarr:
