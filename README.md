@@ -4,6 +4,7 @@ A media server configuration to run Sonarr, Couchpotato and Transmission in Dock
 ## Steps
 - create a `media` user with a home directory and docker access
 - clone this repository in `media`'s $HOME
+- export the environment variables mentioned in `docker-compose.yaml`
 - run `docker-compose up -d`
 - add `/sonarr` to `/home/media/sonarr/config/config.xml` in `UrlBase`
 - add `/couchpotato` to `/home/media/couchpotato/config/config.ini` in url_base
@@ -31,5 +32,5 @@ It also supports SSL that you can setup easily with [letsencrypt](https://letsen
 
 
 ## TODO:
-- automate all the things! 
-
+- add plex
+- replace nginx with traefik

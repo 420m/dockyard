@@ -1,34 +1,81 @@
-version: '2'
+version: '3'
+
 services:
+  plex:
+    image: plexinc/pms-docker
+    networks:
+    - web
+    ports:
+    # DLNA
+    - "1900:1900/udp"
+    - "32469:32469"
+    environment:
+    - PLEX_CLAIM="${PLEX_TOKEN}"
+    - ADVERTISE_IP="http://${IP_ADDRESS}"
+    volumes:
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/couchpotato/movies:/data/movies
+    - ./media/sonarr/series:/data/tvshows
+    - ./media/plex/config/:/config
+    - /tmp/transcode/:/transcode
+    labels:
+    - "traefik.backend=plex"
+    - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
+    - "traefik.port=32400"
+    depends_on:
+    - transmission
+    - sonarr
+    - couchpotato
+
   transmission:
     image: linuxserver/transmission
+    networks:
+    - web
     ports:
-     - "9091:9091"
-     - "51413:51413"
-     - "51413:51413/udp"
+    - "51413:51413"
+    - "51413:51413/udp"
     volumes:
-     - /etc/localtime:/etc/localtime:ro
-     - /home/media/transmission/config/:/config
-     - /home/media/transmission/downloads/:/downloads
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/transmission/config/:/config
+    - ./media/transmission/downloads/:/downloads
+    labels:
+    - "traefik.backend=transmission"
+    - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
+    - "traefik.port=9091"
+
   sonarr:
     image: linuxserver/sonarr
-    ports:
-     - "8989:8989"
+    networks:
+    - web
     volumes:
-     - /dev/rtc:/dev/rtc:ro
-     - /home/media/sonarr/series:/tv
-     - /home/media/sonarr/config:/config
-     - /home/media/transmission/downloads/:/downloads
+    - /dev/rtc:/dev/rtc:ro
+    - ./media/sonarr/series:/tv
+    - ./media/sonarr/config:/config
+    - ./media/transmission/downloads/:/downloads
+    labels:
+    - "traefik.backend=sonarr"
+    - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
+    - "traefik.port=8989"
     depends_on:
-     - transmission
+    - transmission
+
   couchpotato:
     image: linuxserver/couchpotato
-    ports:
-     - "5050:5050"
+    networks:
+    - web
     volumes:
-     - /etc/localtime:/etc/localtime:ro
-     - /home/media/couchpotato/movies:/movies
-     - /home/media/couchpotato/config/:/config
-     - /home/media/transmission/downloads/:/downloads
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/couchpotato/movies:/movies
+    - ./media/couchpotato/config/:/config
+    - ./media/transmission/downloads/:/downloads
+    labels:
+    - "traefik.backend=couchpotato"
+    - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
+    - "traefik.port=5050"
     depends_on:
-     - transmission
+    - transmission
+
+networks:
+  web:
+    external:
+      name: reverseproxy_default
