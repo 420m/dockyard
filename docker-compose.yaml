@@ -13,8 +13,8 @@ services:
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
     - ADVERTISE_IP="http://${IP_ADDRESS}:32400/"
-    - PLEX_UID="${UID}"
-    - PLEX_GID="${GID}"
+    - PLEX_UID="${USER_ID}"
+    - PLEX_GID="${GROUP_ID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/couchpotato/movies:/data/movies
@@ -38,8 +38,8 @@ services:
     - "51413:51413"
     - "51413:51413/udp"
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID="${USER_ID}"
+    - PGID="${GROUP_ID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/transmission/config/:/config
@@ -59,8 +59,8 @@ services:
     - ./media/sonarr/config:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID="${USER_ID}"
+    - PGID="${GROUP_ID}"
     labels:
     - "traefik.backend=sonarr"
     - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
@@ -73,13 +73,13 @@ services:
     networks:
     - web
     volumes:
-    - /etc/localtime:/etc/localtime:ro
+    - /dev/rtc:/dev/rtc:ro
     - ./media/couchpotato/movies:/movies
     - ./media/couchpotato/config/:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID="${USER_ID}"
+    - PGID="${GROUP_ID}"
     labels:
     - "traefik.backend=couchpotato"
     - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
@@ -91,11 +91,8 @@ services:
   # torznab's image will need to be built
   t411proxy:
     build: ../T411-Torznab
-    image: t411-tornzab
     networks:
     - web
-    ports:
-    - "9876:9876"
     environment:
     - "USERNAME=${T411USERNAME}"
     - "PASSWORD=${T411PASSWORD}"
