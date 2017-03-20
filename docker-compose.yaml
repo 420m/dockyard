@@ -76,6 +76,19 @@ services:
     depends_on:
     - transmission
 
+  # uncomment to enable torznab as a T411 proxy for couchpotato and sonarr
+  # torznab's image will need to be built
+  #
+  # torznab:
+  #     image: torznab:latest
+  #     networks:
+  #     - web
+  #     ports:
+  #     - "9876:9876"
+  #     environment:
+  #     - USERNAME="${T411_USER}"
+  #     - PASSWORD="${T411_PASS}"
+
 networks:
   web:
     external:
