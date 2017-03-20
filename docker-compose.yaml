@@ -76,6 +76,17 @@ services:
     depends_on:
     - transmission
 
+  t411proxy:
+    build: ../T411-Torznab
+    image: t411-tornzab
+    networks:
+    - web
+    ports:
+    - "9876:9876"
+    environment:
+    - "USERNAME=${T411USERNAME}"
+    - "PASSWORD=${T411PASSWORD}"
+
 networks:
   web:
     external:
