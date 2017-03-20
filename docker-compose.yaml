@@ -11,9 +11,9 @@ services:
     # - "1900:1900/udp"
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
-    - ADVERTISE_IP="http://${IP_ADDRESS}:32400/"
-    - PLEX_UID="${USER_ID}"
-    - PLEX_GID="${GROUP_ID}"
+    - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
+    - "PLEX_UID=${USER_ID}"
+    - "PLEX_GID=${GROUP_ID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/couchpotato/movies:/data/movies
