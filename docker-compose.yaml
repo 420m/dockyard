@@ -7,8 +7,9 @@ services:
     - web
     ports:
     # DLNA
-    - "1900:1900/udp"
     - "32469:32469"
+    - "1900:1900/udp"
+    - "32400:32400"
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
     - ADVERTISE_IP="http://${IP_ADDRESS}"
