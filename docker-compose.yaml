@@ -5,11 +5,10 @@ services:
     image: plexinc/pms-docker
     networks:
     - web
-    ports:
-    # DLNA
-    - "32469:32469"
-    - "1900:1900/udp"
-    - "32400:32400"
+    # ports:
+    # DLNA (uncomment if you need DLNA)
+    # - "32469:32469"
+    # - "1900:1900/udp"
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
     - ADVERTISE_IP="http://${IP_ADDRESS}:32400/"
