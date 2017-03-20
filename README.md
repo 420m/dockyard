@@ -38,7 +38,7 @@ A media server configuration to run Plex, Sonarr, Couchpotato and Transmission i
 
 ### Use T411 (French)
 
-`docker-compose.yaml` contains a commented-out section about torznab. Clone torznab from GitHub, build the image, uncomment this section and add `T411_USER` and `T411_PASS` environment variables to the startup command to start torznab, which you can use as a proxy to use t411 in Sonarr and Couchpotato.
+`docker-compose.yaml` contains a commented-out section about torznab. Clone [the torznab repo](https://github.com/KiLMaN/T411-Torznab), uncomment this section and add `T411USERNAME` and `T411PASSWORD` environment variables to the startup command to start torznab, which you can use as a proxy to use t411 in Sonarr and Couchpotato.
 
 
 ## TODO:
