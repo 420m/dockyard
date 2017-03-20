@@ -12,7 +12,9 @@ services:
     - "32400:32400"
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
-    - ADVERTISE_IP="http://${IP_ADDRESS}"
+    - ADVERTISE_IP="http://${IP_ADDRESS}:32400/"
+    - PLEX_UID="${UID}"
+    - PLEX_GID="${GID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/couchpotato/movies:/data/movies
@@ -35,6 +37,9 @@ services:
     ports:
     - "51413:51413"
     - "51413:51413/udp"
+    environment:
+    - PUID="${UID}"
+    - PGID="${GID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/transmission/config/:/config
@@ -53,6 +58,9 @@ services:
     - ./media/sonarr/series:/tv
     - ./media/sonarr/config:/config
     - ./media/transmission/downloads/:/downloads
+    environment:
+    - PUID="${UID}"
+    - PGID="${GID}"
     labels:
     - "traefik.backend=sonarr"
     - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
@@ -69,6 +77,9 @@ services:
     - ./media/couchpotato/movies:/movies
     - ./media/couchpotato/config/:/config
     - ./media/transmission/downloads/:/downloads
+    environment:
+    - PUID="${UID}"
+    - PGID="${GID}"
     labels:
     - "traefik.backend=couchpotato"
     - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
