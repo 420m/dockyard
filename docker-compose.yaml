@@ -13,8 +13,8 @@ services:
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
     - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
-    - "PLEX_UID=${USER_ID}"
-    - "PLEX_GID=${GROUP_ID}"
+    - PLEX_UID=${USER_ID}
+    - PLEX_GID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/couchpotato/movies:/data/movies
@@ -40,8 +40,8 @@ services:
     - "51413:51413"
     - "51413:51413/udp"
     environment:
-    - "PUID=${USER_ID}"
-    - "PGID=${GROUP_ID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/transmission/config/:/config
@@ -63,8 +63,8 @@ services:
     - ./media/sonarr/config:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - "PUID=${USER_ID}"
-    - "PGID=${GROUP_ID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
     - "traefik.enable=true"
     - "traefik.backend=sonarr"
@@ -84,8 +84,8 @@ services:
     - ./media/couchpotato/config/:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - "PUID=${USER_ID}"
-    - "PGID=${GROUP_ID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
     - "traefik.enable=true"
     - "traefik.backend=couchpotato"
@@ -97,13 +97,13 @@ services:
 
   # uncomment to enable torznab as a T411 proxy for sonarr
   # torznab's image will need to be built
-  t411proxy:
-    build: ../T411-Torznab
-    networks:
-    - web
-    environment:
-    - "USERNAME=${T411USERNAME}"
-    - "PASSWORD=${T411PASSWORD}"
+  # t411proxy:
+  #   build: ../T411-Torznab
+  #   networks:
+  #   - web
+  #   environment:
+  #   - USERNAME="${T411USERNAME}"
+  #   - PASSWORD="${T411PASSWORD}"
 
   # Sonarr to... a bunch of public trackers!
   jackett:
@@ -114,8 +114,8 @@ services:
     - ./media/jackett/config/:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - "PUID=${USER_ID}"
-    - "PGID=${GROUP_ID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     ports:
     - 9117
     labels:
