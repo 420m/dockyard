@@ -21,9 +21,11 @@ services:
     - ./media/plex/config/:/config
     - /tmp/transcode/:/transcode
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=plex"
     - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
     - "traefik.port=32400"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
     - sonarr
@@ -37,16 +39,18 @@ services:
     - "51413:51413"
     - "51413:51413/udp"
     environment:
-    - PUID="${USER_ID}"
-    - PGID="${GROUP_ID}"
+    - "PUID=${USER_ID}"
+    - "PGID=${GROUP_ID}"
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/transmission/config/:/config
     - ./media/transmission/downloads/:/downloads
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=transmission"
     - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
     - "traefik.port=9091"
+    - "traefik.docker.network=web"
 
   sonarr:
     image: linuxserver/sonarr
@@ -58,12 +62,14 @@ services:
     - ./media/sonarr/config:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${USER_ID}"
-    - PGID="${GROUP_ID}"
+    - "PUID=${USER_ID}"
+    - "PGID=${GROUP_ID}"
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=sonarr"
     - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
     - "traefik.port=8989"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
 
@@ -77,12 +83,14 @@ services:
     - ./media/couchpotato/config/:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${USER_ID}"
-    - PGID="${GROUP_ID}"
+    - "PUID=${USER_ID}"
+    - "PGID=${GROUP_ID}"
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=couchpotato"
     - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
     - "traefik.port=5050"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
 
