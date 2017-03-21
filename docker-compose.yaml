@@ -6,15 +6,15 @@ services:
     networks:
     - web
     ports:
-    # DLNA
-    - "32469:32469"
-    - "1900:1900/udp"
-    - "32400:32400"
+    - 32400:32400
+    # DLNA (uncomment if you need DLNA)
+    # - "32469:32469"
+    # - "1900:1900/udp"
     environment:
     - PLEX_CLAIM="${PLEX_TOKEN}"
-    - ADVERTISE_IP="http://${IP_ADDRESS}:32400/"
-    - PLEX_UID="${UID}"
-    - PLEX_GID="${GID}"
+    - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
+    - PLEX_UID=${USER_ID}
+    - PLEX_GID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/couchpotato/movies:/data/movies
@@ -22,9 +22,11 @@ services:
     - ./media/plex/config/:/config
     - /tmp/transcode/:/transcode
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=plex"
     - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
     - "traefik.port=32400"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
     - sonarr
@@ -38,16 +40,18 @@ services:
     - "51413:51413"
     - "51413:51413/udp"
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
     - ./media/transmission/config/:/config
     - ./media/transmission/downloads/:/downloads
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=transmission"
     - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
     - "traefik.port=9091"
+    - "traefik.docker.network=web"
 
   sonarr:
     image: linuxserver/sonarr
@@ -59,12 +63,14 @@ services:
     - ./media/sonarr/config:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=sonarr"
     - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
     - "traefik.port=8989"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
 
@@ -73,32 +79,51 @@ services:
     networks:
     - web
     volumes:
-    - /etc/localtime:/etc/localtime:ro
+    - /dev/rtc:/dev/rtc:ro
     - ./media/couchpotato/movies:/movies
     - ./media/couchpotato/config/:/config
     - ./media/transmission/downloads/:/downloads
     environment:
-    - PUID="${UID}"
-    - PGID="${GID}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
+    - "traefik.enable=true"
     - "traefik.backend=couchpotato"
     - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
     - "traefik.port=5050"
+    - "traefik.docker.network=web"
     depends_on:
     - transmission
 
-  # uncomment to enable torznab as a T411 proxy for couchpotato and sonarr
+  # uncomment to enable torznab as a T411 proxy for sonarr
   # torznab's image will need to be built
-  t411proxy:
-    build: ../T411-Torznab
-    image: t411-tornzab
+  # t411proxy:
+  #   build: ../T411-Torznab
+  #   networks:
+  #   - web
+  #   environment:
+  #   - USERNAME="${T411USERNAME}"
+  #   - PASSWORD="${T411PASSWORD}"
+
+  # Sonarr to... a bunch of public trackers!
+  jackett:
+    image: "linuxserver/jackett:45"
     networks:
     - web
-    ports:
-    - "9876:9876"
+    volumes:
+    - ./media/jackett/config/:/config
+    - ./media/transmission/downloads/:/downloads
     environment:
-    - "USERNAME=${T411USERNAME}"
-    - "PASSWORD=${T411PASSWORD}"
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
+    ports:
+    - 9117
+    labels:
+    - "traefik.enable=true"
+    - "traefik.backend=jackett"
+    - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
+    - "traefik.port=9117"
+    - "traefik.docker.network=web"
 
 networks:
   web:
