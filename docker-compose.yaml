@@ -5,7 +5,8 @@ services:
     image: plexinc/pms-docker
     networks:
     - web
-    # ports:
+    ports:
+    - 32400:32400
     # DLNA (uncomment if you need DLNA)
     # - "32469:32469"
     # - "1900:1900/udp"
@@ -94,7 +95,7 @@ services:
     depends_on:
     - transmission
 
-  # uncomment to enable torznab as a T411 proxy for couchpotato and sonarr
+  # uncomment to enable torznab as a T411 proxy for sonarr
   # torznab's image will need to be built
   t411proxy:
     build: ../T411-Torznab
@@ -103,6 +104,26 @@ services:
     environment:
     - "USERNAME=${T411USERNAME}"
     - "PASSWORD=${T411PASSWORD}"
+
+  # Sonarr to... a bunch of public trackers!
+  jackett:
+    image: "linuxserver/jackett:45"
+    networks:
+    - web
+    volumes:
+    - ./media/jackett/config/:/config
+    - ./media/transmission/downloads/:/downloads
+    environment:
+    - "PUID=${USER_ID}"
+    - "PGID=${GROUP_ID}"
+    ports:
+    - 9117
+    labels:
+    - "traefik.enable=true"
+    - "traefik.backend=jackett"
+    - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
+    - "traefik.port=9117"
+    - "traefik.docker.network=web"
 
 networks:
   web:
