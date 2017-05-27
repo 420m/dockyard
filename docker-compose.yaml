@@ -17,7 +17,7 @@ services:
     - PLEX_GID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
-    - ./media/couchpotato/movies:/data/movies
+    - ./media/radarr/movies:/data/movies
     - ./media/sonarr/series:/data/tvshows
     - ./media/plex/config/:/config
     - /tmp/transcode/:/transcode
@@ -30,7 +30,7 @@ services:
     depends_on:
     - transmission
     - sonarr
-    - couchpotato
+    - radarr
 
   transmission:
     image: linuxserver/transmission
@@ -58,6 +58,7 @@ services:
     networks:
     - web
     volumes:
+    - /etc/localtime:/etc/localtime:ro
     - /dev/rtc:/dev/rtc:ro
     - ./media/sonarr/series:/tv
     - ./media/sonarr/config:/config
@@ -74,38 +75,29 @@ services:
     depends_on:
     - transmission
 
-  couchpotato:
-    image: linuxserver/couchpotato
+  radarr:
+    image: linuxserver/radarr
     networks:
     - web
     volumes:
+    - /etc/localtime:/etc/localtime:ro
     - /dev/rtc:/dev/rtc:ro
-    - ./media/couchpotato/movies:/movies
-    - ./media/couchpotato/config/:/config
+    - ./media/radarr/movies:/movies
+    - ./media/radarr/config:/config
     - ./media/transmission/downloads/:/downloads
     environment:
     - PUID=${USER_ID}
     - PGID=${GROUP_ID}
     labels:
     - "traefik.enable=true"
-    - "traefik.backend=couchpotato"
-    - "traefik.frontend.rule=Host:couchpotato.${DOMAIN_NAME}"
-    - "traefik.port=5050"
+    - "traefik.backend=radarr"
+    - "traefik.frontend.rule=Host:radarr.${DOMAIN_NAME}"
+    - "traefik.port=7878"
     - "traefik.docker.network=web"
     depends_on:
     - transmission
 
-  # uncomment to enable torznab as a T411 proxy for sonarr
-  # torznab's image will need to be built
-  # t411proxy:
-  #   build: ../T411-Torznab
-  #   networks:
-  #   - web
-  #   environment:
-  #   - USERNAME="${T411USERNAME}"
-  #   - PASSWORD="${T411PASSWORD}"
-
-  # Sonarr to... a bunch of public trackers!
+  # Proxy to a bunch of public trackers
   jackett:
     image: "linuxserver/jackett:45"
     networks:
