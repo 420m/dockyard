@@ -17,7 +17,7 @@ services:
     - PLEX_GID=${GROUP_ID}
     volumes:
     - /etc/localtime:/etc/localtime:ro
-    - ./media/couchpotato/movies:/data/movies
+    - ./media/radarr/movies:/data/movies
     - ./media/sonarr/series:/data/tvshows
     - ./media/plex/config/:/config
     - /tmp/transcode/:/transcode
@@ -30,7 +30,7 @@ services:
     depends_on:
     - transmission
     - sonarr
-    - couchpotato
+    - radarr
 
   transmission:
     image: linuxserver/transmission
