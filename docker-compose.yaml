@@ -2,7 +2,7 @@ version: '3'
 
 services:
   plex:
-    image: plexinc/pms-docker
+    image: plexinc/pms-docker:latest
     networks:
     - web
     ports:
@@ -33,7 +33,7 @@ services:
     - radarr
 
   transmission:
-    image: linuxserver/transmission
+    image: linuxserver/transmission:latest
     networks:
     - web
     ports:
@@ -54,7 +54,7 @@ services:
     - "traefik.docker.network=web"
 
   sonarr:
-    image: linuxserver/sonarr
+    image: linuxserver/sonarr:latest
     networks:
     - web
     volumes:
@@ -76,7 +76,7 @@ services:
     - transmission
 
   radarr:
-    image: linuxserver/radarr
+    image: linuxserver/radarr:latest
     networks:
     - web
     volumes:
@@ -99,7 +99,7 @@ services:
 
   # Proxy to a bunch of public trackers
   jackett:
-    image: "linuxserver/jackett:45"
+    image: "linuxserver/jackett:latest"
     networks:
     - web
     volumes:
