@@ -126,6 +126,26 @@ services:
       - "traefik.port=9117"
       - "traefik.docker.network=web"
 
+  ombi:
+    image: linuxserver/ombi
+    container_name: ombi
+    restart: always
+    ports:
+      - "3579:3579"
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./media/ombi/config:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=ombi"
+      - "traefik.frontend.rule=Host:ombi.${DOMAIN_NAME}"
+      - "traefik.port=3579"
+      - "traefik.docker.network=web"
 networks:
   web:
     external:
