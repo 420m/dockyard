@@ -5,11 +5,6 @@ services:
     image: plexinc/pms-docker:latest
     networks:
       - web
-    ports:
-      - 32400:32400
-      # DLNA (uncomment if you need DLNA)
-      # - "32469:32469"
-      # - "1900:1900/udp"
     environment:
       - PLEX_CLAIM="${PLEX_TOKEN}"
       - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
@@ -36,8 +31,6 @@ services:
     image: linuxserver/plexpy:latest
     networks:
       - web
-    ports:
-      - 8181:8181
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -57,9 +50,6 @@ services:
     image: linuxserver/transmission:latest
     networks:
       - web
-    ports:
-      - "51413:51413"
-      - "51413:51413/udp"
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -120,7 +110,7 @@ services:
 
   # Proxy to a bunch of public trackers
   jackett:
-    image: "linuxserver/jackett:latest"
+    image: linuxserver/jackett:latest
     networks:
       - web
     volumes:
@@ -129,8 +119,6 @@ services:
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
-    ports:
-      - 9117
     labels:
       - "traefik.enable=true"
       - "traefik.backend=jackett"
