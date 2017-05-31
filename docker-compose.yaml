@@ -137,7 +137,26 @@ services:
       - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
       - "traefik.port=9117"
       - "traefik.docker.network=web"
-
+  
+  organizr:
+    image: lsiocommunity/organizr
+    container_name: organizr
+    #restart: always
+    ports:
+      - "80:80"
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - ./media/organizr/config:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=organizr"
+      - "traefik.frontend.rule=Host:organizr.${DOMAIN_NAME}"
+      - "traefik.port=80"
+      - "traefik.docker.network=web"
 networks:
   web:
     external:
