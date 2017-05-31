@@ -101,5 +101,11 @@ Session.vim
 # auto-generated tag files
 tags
 
-# Media (oooops...)
-media/
+# We do not want to commit user data
+media
+
+# and even more, we don't want to commit TLS Certs :o
+acme/
+
+# or htpasswd files
+htpasswd
