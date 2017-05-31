@@ -101,5 +101,9 @@ Session.vim
 # auto-generated tag files
 tags
 
-# Media (oooops...)
-media/
+# Media
+media
+
+# Reverse proxy
+## Heheheheh
+acme/

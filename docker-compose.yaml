@@ -1,156 +1,190 @@
 version: '2.1'
 
 services:
+  # Our reverse proxy, handling host-based routing, TLS termination, Let's Encrypt...
+  proxy:
+    image: traefik:latest
+    container_name: traefik
+    restart: unless-stopped
+    command:
+    - --accesslog
+    - --api.insecure
+    - --global.sendanonymoususage=false
+
+    # Certificate resolution
+    - --certificatesresolvers.letsencrypt
+    - --certificatesresolvers.letsencrypt.acme.tlschallenge=true
+    - --certificatesresolvers.letsencrypt.acme.email=${ACME_EMAIL}
+    - --certificatesresolvers.letsencrypt.acme.storage=/etc/traefik/acme/acme.json
+
+    # Providers
+    - --providers.docker=true
+    - --providers.docker.exposedbydefault=true
+
+    # Entrypoint
+    - --entrypoints.websecure.address=:443
+
+    ports:
+
+    # Just for the HTTP -> HTTPs redirection
+    - "443:443"
+
+    # Traefik's admin port's only available via localhost or using
+    # SSH tunelling: ssh -L YOUR_PORT:127.0.0.1:YOUR_PORT <your server>
+    - "127.0.0.1:8080:8080"
+
+    volumes:
+    - /var/run/docker.sock:/var/run/docker.sock:ro
+    - ./acme/:/etc/traefik/acme
+
+  # Plex, the actual media server organizing and streaming video files to all
+  # your devices
   plex:
     image: plexinc/pms-docker:latest
+    restart: unless-stopped
     container_name: plex
-    networks:
-      - web
     environment:
-      - PLEX_CLAIM="${PLEX_TOKEN}"
-      - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
-      - PLEX_UID=${USER_ID}
-      - PLEX_GID=${GROUP_ID}
+    - PLEX_UID=${USER_ID}
+    - PLEX_GID=${GROUP_ID}
+    ports:
+    - 32400:32400
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/radarr/movies:/data/movies
-      - ./media/sonarr/series:/data/tvshows
-      - ./media/plex/config/:/config
-      - /tmp/transcode/:/transcode
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=plex"
-      - "traefik.docker.network=web"
-      - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
-      - "traefik.port=32400"
-    depends_on:
-      - transmission
-      - sonarr
-      - radarr
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/radarr/movies:/data/movies
+    - ./media/sonarr/series:/data/tvshows
+    - ./media/manual/music:/data/music
+    - ./media/manual/pictures:/data/pictures
+    - ./media/manual/videos:/data/videos
+    - ./media/plex/config/:/config
+    - /tmp/transcode/:/transcode
 
+  # An activity monitoring tool for plex, based on plex logs
   plexpy:
     image: linuxserver/plexpy:latest
+    restart: unless-stopped
     container_name: plexpy
-    networks:
-      - web
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     volumes:
-      - ./media/plexpy:/config
-      - ./media/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
+    - ./media/plexpy:/config
+    - ./media/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=plexpy"
-      - "traefik.frontend.rule=Host:plexpy.${DOMAIN_NAME}"
-      - "traefik.port=8181"
-      - "traefik.docker.network=web"
-    depends_on:
-      - plex
+    - "traefik.enable=true"
+    - "traefik.http.routers.plexpy.rule=Host(`plexpy.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.plexpy.entrypoints=websecure"
+    - "traefik.http.routers.plexpy.tls=true"
+    - "traefik.http.routers.plexpy.tls.certresolver=letsencrypt"
+    expose:
+    - 8181
 
+  # Our web-based BitTorrent client
   transmission:
     image: linuxserver/transmission:latest
     container_name: transmission
     networks:
       - web
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/transmission/config/:/config
-      - ./media/transmission/downloads/:/downloads
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/transmission/config/:/config
+    - ./media/transmission/downloads/:/downloads
+    ports:
+    - 51413:51413
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=transmission"
-      - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
-      - "traefik.port=9091"
-      - "traefik.docker.network=web"
+    - "traefik.enable=true"
+    - "traefik.http.routers.transmission.rule=Host(`transmission.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.transmission.entrypoints=websecure"
+    - "traefik.http.routers.transmission.tls=true"
+    - "traefik.http.routers.transmission.tls.certresolver=letsencrypt"
+    expose:
+    - 9091
 
+  # Scrapes TV shows metadata and finds matching torrents... automatically
+  # after episodes are released
   sonarr:
     image: linuxserver/sonarr:latest
+    restart: unless-stopped
     container_name: sonarr
-    networks:
-      - web
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /dev/rtc:/dev/rtc:ro
-      - ./media/sonarr/series:/tv
-      - ./media/sonarr/config:/config
-      - ./media/transmission/downloads/:/downloads
+    - /etc/localtime:/etc/localtime:ro
+    - /dev/rtc:/dev/rtc:ro
+    - ./media/sonarr/series:/tv
+    - ./media/sonarr/config:/config
+    - ./media/transmission/downloads/:/downloads
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=sonarr"
-      - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
-      - "traefik.port=8989"
-      - "traefik.docker.network=web"
-    depends_on:
-      - transmission
+    - "traefik.enable=true"
+    - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.sonarr.entrypoints=websecure"
+    - "traefik.http.routers.sonarr.tls=true"
+    - "traefik.http.routers.sonarr.tls.certresolver=letsencrypt"
+    expose:
+    - 8989
 
+  # Scrapes film metadata and finds matching torrents
   radarr:
     image: linuxserver/radarr:latest
+    restart: unless-stopped
     container_name: radarr
-    networks:
-      - web
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - /dev/rtc:/dev/rtc:ro
-      - ./media/radarr/movies:/movies
-      - ./media/radarr/config:/config
-      - ./media/transmission/downloads/:/downloads
+    - /etc/localtime:/etc/localtime:ro
+    - /dev/rtc:/dev/rtc:ro
+    - ./media/radarr/movies:/movies
+    - ./media/radarr/config:/config
+    - ./media/transmission/downloads/:/downloads
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=radarr"
-      - "traefik.frontend.rule=Host:radarr.${DOMAIN_NAME}"
-      - "traefik.port=7878"
-      - "traefik.docker.network=web"
-    depends_on:
-      - transmission
+    - "traefik.enable=true"
+    - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.radarr.entrypoints=websecure"
+    - "traefik.http.routers.radarr.tls=true"
+    - "traefik.http.routers.radarr.tls.certresolver=letsencrypt"
+    expose:
+    - 7878
 
-  # Proxy to a bunch of public trackers
+  # A Tornzab proxy to many many torrent tracker websites (public and private)
   jackett:
     image: linuxserver/jackett:latest
+    restart: unless-stopped
     container_name: jackett
-    networks:
-      - web
     volumes:
-      - ./media/jackett/config/:/config
-      - ./media/transmission/downloads/:/downloads
+    - ./media/jackett/config/:/config
+    - ./media/transmission/downloads/:/downloads
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=jackett"
-      - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
-      - "traefik.port=9117"
-      - "traefik.docker.network=web"
+    - "traefik.enable=true"
+    - "traefik.http.routers.jackett.rule=Host(`jackett.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.jackett.entrypoints=websecure"
+    - "traefik.http.routers.jackett.tls=true"
+    - "traefik.http.routers.jackett.tls.certresolver=letsencrypt"
+    expose:
+    - 9117
 
+  # Makes it possible for your plex users to request new content on your Plex
   ombi:
     image: linuxserver/ombi
+    restart: unless-stopped
     container_name: ombi
-    restart: always
-    networks:
-      - web
     environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
+    - PUID=${USER_ID}
+    - PGID=${GROUP_ID}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/ombi/config:/config
+    - /etc/localtime:/etc/localtime:ro
+    - ./media/ombi/config:/config
     labels:
-      - "traefik.enable=true"
-      - "traefik.backend=ombi"
-      - "traefik.frontend.rule=Host:ombi.${DOMAIN_NAME}"
-      - "traefik.port=3579"
-      - "traefik.docker.network=web"
-
-networks:
-  web:
-    external: true
+    - "traefik.enable=true"
+    - "traefik.http.routers.ombi.rule=Host(`ombi.${DOMAIN_NAME}`)"
+    - "traefik.http.routers.ombi.entrypoints=websecure"
+    - "traefik.http.routers.ombi.tls=true"
+    - "traefik.http.routers.ombi.tls.certresolver=letsencrypt"
+    expose:
+    - 3579
