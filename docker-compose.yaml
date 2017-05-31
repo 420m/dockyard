@@ -138,6 +138,47 @@ services:
       - "traefik.port=9117"
       - "traefik.docker.network=web"
 
+  nzbget:
+    image: linuxserver/nzbget
+    container_name: nzbget
+    restart: always
+    ports:
+      - "6789:6789"
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - ./media/nzbget/config:/config
+      - ./media/nzbget/downloads:/downloads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=nzbget"
+      - "traefik.frontend.rule=Host:nzbget.${DOMAIN_NAME}"
+      - "traefik.port=6789"
+      - "traefik.docker.network=web"
+
+  hydra:
+    image: linuxserver/hydra
+    container_name: hydra
+    restart: always
+    ports:
+      - "5075:5075"
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - ./media/hydra/config:/config
+      - ./media/hydra/downloads:/downloads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=hydra"
+      - "traefik.frontend.rule=Host:hydra.${DOMAIN_NAME}"
+      - "traefik.port=5075"
+      - "traefik.docker.network=web"
 networks:
   web:
     external:
