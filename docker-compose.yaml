@@ -138,6 +138,29 @@ services:
       - "traefik.port=9117"
       - "traefik.docker.network=web"
 
+  headphones:
+    image: linuxserver/headphones
+    container_name: headphones
+    restart: always
+    ports:
+      - "8182:8181" #changed port due to plexpy
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - ./media/headphones/config:/config
+      - ./media/transmission/downloads:/downloads
+      - ./media/headphones/music:/music
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=headphones"
+      - "traefik.frontend.rule=Host:headphones.${DOMAIN_NAME}"
+      - "traefik.port=8182"
+      - "traefik.docker.network=web"
+    depends_on:
+      - transmission
 networks:
   web:
     external:
