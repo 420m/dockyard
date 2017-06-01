@@ -164,4 +164,4 @@ services:
 networks:
   web:
     external:
-      name: reverseproxy_default
+      name: traefik_default
