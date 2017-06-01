@@ -1,0 +1,167 @@
+version: '3'
+
+services:
+  plex:
+    image: plexinc/pms-docker:latest
+    restart: unless-stopped
+    container_name: plex
+    networks:
+      - web
+    environment:
+      - PLEX_CLAIM="${PLEX_TOKEN}"
+      - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
+      - PLEX_UID=${USER_ID}
+      - PLEX_GID=${GROUP_ID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./media/radarr/movies:/data/movies
+      - ./media/sonarr/series:/data/tvshows
+      - ./media/plex/config/:/config
+      - /tmp/transcode/:/transcode
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=plex"
+      - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
+      - "traefik.port=32400"
+      - "traefik.docker.network=web"
+    depends_on:
+      - transmission
+      - sonarr
+      - radarr
+
+  plexpy:
+    image: linuxserver/plexpy:latest
+    restart: unless-stopped
+    container_name: plexpy
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - ./media/plexpy:/config
+      - ./media/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=plexpy"
+      - "traefik.frontend.rule=Host:plexpy.${DOMAIN_NAME}"
+      - "traefik.port=8181"
+      - "traefik.docker.network=web"
+    depends_on:
+      - plex
+
+  transmission:
+    image: linuxserver/transmission:latest
+    restart: unless-stopped
+    container_name: transmission
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./media/transmission/config/:/config
+      - ./media/transmission/downloads/:/downloads
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=transmission"
+      - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
+      - "traefik.port=9091"
+      - "traefik.docker.network=web"
+
+  sonarr:
+    image: linuxserver/sonarr:latest
+    restart: unless-stopped
+    container_name: sonarr
+    networks:
+      - web
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /dev/rtc:/dev/rtc:ro
+      - ./media/sonarr/series:/tv
+      - ./media/sonarr/config:/config
+      - ./media/transmission/downloads/:/downloads
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=sonarr"
+      - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
+      - "traefik.port=8989"
+      - "traefik.docker.network=web"
+    depends_on:
+      - transmission
+
+  radarr:
+    image: linuxserver/radarr:latest
+    restart: unless-stopped
+    container_name: radarr
+    networks:
+      - web
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - /dev/rtc:/dev/rtc:ro
+      - ./media/radarr/movies:/movies
+      - ./media/radarr/config:/config
+      - ./media/transmission/downloads/:/downloads
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=radarr"
+      - "traefik.frontend.rule=Host:radarr.${DOMAIN_NAME}"
+      - "traefik.port=7878"
+      - "traefik.docker.network=web"
+    depends_on:
+      - transmission
+
+  # Proxy to a bunch of public trackers
+  jackett:
+    image: linuxserver/jackett:latest
+    restart: unless-stopped
+    container_name: jackett
+    networks:
+      - web
+    volumes:
+      - ./media/jackett/config/:/config
+      - ./media/transmission/downloads/:/downloads
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=jackett"
+      - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
+      - "traefik.port=9117"
+      - "traefik.docker.network=web"
+
+  # Opens access to Radarr/Sonarr to your Plex friends
+  ombi:
+    image: linuxserver/ombi
+    restart: unless-stopped
+    container_name: ombi
+    restart: always
+    ports:
+      - "3579:3579"
+    networks:
+      - web
+    environment:
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+    volumes:
+      - /etc/localtime:/etc/localtime:ro
+      - ./media/ombi/config:/config
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=ombi"
+      - "traefik.frontend.rule=Host:ombi.${DOMAIN_NAME}"
+      - "traefik.port=3579"
+      - "traefik.docker.network=web"
+
+networks:
+  web:
+    external:
+      name: reverseproxy_default
