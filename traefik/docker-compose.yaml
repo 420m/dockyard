@@ -3,6 +3,8 @@ version: '3'
 services:
   proxy:
     image: traefik
+    container_name: traefik
+    restart: unless-stopped
     command: --web --web.address=":${ADMIN_PORT}" --docker --docker.domain="${DOCKER_DOMAIN}" --docker.usebindportip=true --docker.exposedbydefault=false --acme.email="${ACME_EMAIL}"
     networks:
     - default
