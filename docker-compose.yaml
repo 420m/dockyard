@@ -1,8 +1,9 @@
-version: '3'
+version: '2.1'
 
 services:
   plex:
     image: plexinc/pms-docker:latest
+    container_name: plex
     networks:
       - web
     environment:
@@ -19,9 +20,9 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.backend=plex"
+      - "traefik.docker.network=web"
       - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
       - "traefik.port=32400"
-      - "traefik.docker.network=web"
     depends_on:
       - transmission
       - sonarr
@@ -29,6 +30,7 @@ services:
 
   plexpy:
     image: linuxserver/plexpy:latest
+    container_name: plexpy
     networks:
       - web
     environment:
@@ -48,6 +50,7 @@ services:
 
   transmission:
     image: linuxserver/transmission:latest
+    container_name: transmission
     networks:
       - web
     environment:
@@ -66,6 +69,7 @@ services:
 
   sonarr:
     image: linuxserver/sonarr:latest
+    container_name: sonarr
     networks:
       - web
     volumes:
@@ -88,6 +92,7 @@ services:
 
   radarr:
     image: linuxserver/radarr:latest
+    container_name: radarr
     networks:
       - web
     volumes:
@@ -111,6 +116,7 @@ services:
   # Proxy to a bunch of public trackers
   jackett:
     image: linuxserver/jackett:latest
+    container_name: jackett
     networks:
       - web
     volumes:
@@ -130,8 +136,6 @@ services:
     image: linuxserver/ombi
     container_name: ombi
     restart: always
-    ports:
-      - "3579:3579"
     networks:
       - web
     environment:
@@ -146,7 +150,7 @@ services:
       - "traefik.frontend.rule=Host:ombi.${DOMAIN_NAME}"
       - "traefik.port=3579"
       - "traefik.docker.network=web"
+
 networks:
   web:
-    external:
-      name: reverseproxy_default
+    external: true

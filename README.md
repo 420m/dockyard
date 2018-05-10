@@ -12,6 +12,7 @@ A media server configuration to run Plex, Sonarr, Radarr, and Transmission in Do
 - create a user for your media server, export its `$USER_ID` and `$GROUP_ID`.
 - create a media folder in docker-compose's folder with $USER_ID:$GROUP_ID ownership
 - get your Plex claim token at https://www.plex.tv/claim/
+- create a `web` docker network with `docker network create web`
 - run `DOMAIN_NAME="..." PLEX_TOKEN="..." USER_ID="$USER_ID" GROUP_ID="$GROUP_ID" docker-compose up -d`
 - profit :)
 
