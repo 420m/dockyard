@@ -11,7 +11,7 @@ A media server configuration to run Plex, Sonarr, Radarr, and Transmission in Do
 - clone this repository
 - clone and setup [the reverse proxy](https://github.com/hkaj/reverse_proxy)
 - create a user for your media server, export its `$USER_ID` and `$GROUP_ID`.
-- create a media folder in docker-compose's folder with $USER_ID:$GROUP_ID ownership
+- create a folder named `media` in this folder (`dockyard`) owned by $USER_ID:$GROUP_ID from your `media` user.
 - get your Plex claim token at https://www.plex.tv/claim/
 - create a `web` docker network with `docker network create web`
 - run `DOMAIN_NAME="..." PLEX_TOKEN="..." USER_ID="$USER_ID" GROUP_ID="$GROUP_ID" docker-compose up -d`
