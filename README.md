@@ -1,50 +1,40 @@
 # Media Server
 
-A media server configuration to run Plex, Sonarr, Radarr, and Transmission in Docker and behind Traefik.
-
+A media server configuration to run Jellyfin, Sonarr, Radarr, and qbittorrent in Docker and behind Traefik.
 
 ## First run
 
 - install [Docker](https://www.docker.com/)
 - install [Docker Compose](https://docs.docker.com/compose/)
-- create a [Plex accout](https://www.plex.tv/)
 - clone this repository
+- create a `web` docker network with `docker network create web`
 - clone and setup [the reverse proxy](https://github.com/hkaj/reverse_proxy)
 - create a user for your media server, export its `$USER_ID` and `$GROUP_ID`.
+- set your TZ as an env var, using this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List), e.g. "Europe/Paris"
 - create a folder named `media` in this folder (`dockyard`) owned by $USER_ID:$GROUP_ID from your `media` user.
-- get your Plex claim token at https://www.plex.tv/claim/
-- create a `web` docker network with `docker network create web`
-- run `DOMAIN_NAME="..." PLEX_TOKEN="..." USER_ID="$USER_ID" GROUP_ID="$GROUP_ID" docker-compose up -d`
+- if you want to setup a VPN or SOCKS5 proxy to secure qbittorrent traffic, do that and uncomment the corresponding env var in the qbittorrent service
+- run `DOMAIN_NAME="..." USER_ID="$USER_ID" GROUP_ID="$GROUP_ID" TZ="$TZ" docker compose up -d`
 - profit :)
 
 ## Config
 
+The expected folder structure is:
 
-### Transmission
+```
+media/
+  library/  # where jellyfin will look, and where sonarr/radarr will hardlink to
+    movies/
+    tv/
+  torrents/  # where qbittorrent will download content and where sonarr/radarr will hardlink from
+    movies/
+    tv/
+```
 
-We use [Transmission](https://transmissionbt.com/) as the downloader.
-
-- stop transmission's container
-- configure basic auth at `media/transmission/config/settings.json` (you will need to touch `rpc-authentication-required`, `rpc-username` and `rpc-password`)
-- start transmission's container
-
-
-### Sonarr
-
-We use [Sonarr](https://sonarr.tv/) to track and manage TV shows.
-
-- setup auto-update and authentication
-- connect transmission as a downloader
-
-
-### Radarr
-
-We use [Radarr](https://radarr.video/) (a clone of Sonarr) to track and manage movies.
-
-- setup auto-update and authentication
-- connect transmission as a downloader
-
-
-### Jackett
-
-We use [Jackett](https://github.com/Jackett/Jackett) as a proxy between private trackers and our other components.
+* Configure qbittorrent to download torrents
+    * To connect to it, check its container logs. It generates a random password upon each start.
+* Create a movies and a tv categories in qbittorent
+* Configure a download client in sonarr and radarr to use qbittorrent, pass them the above mentioned categories
+* Configure indexers in prowlarr
+* Configure prowlarr to connect to sonarr and radarr
+* Configure Sonarr and Radarr to use hardlinking and avoid copying files in `Settings => Media Management => Importing`
+* In Jellyfin, add the opensubtitles plugin
