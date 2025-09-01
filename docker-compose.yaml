@@ -1,155 +1,142 @@
-version: '2.1'
-
 services:
-  plex:
-    image: plexinc/pms-docker:latest
-    container_name: plex
+  jellyfin:
+    image: lscr.io/linuxserver/jellyfin:latest
+    container_name: jellyfin
     networks:
       - web
     environment:
-      - PLEX_CLAIM="${PLEX_TOKEN}"
-      - ADVERTISE_IP="https://plex.${DOMAIN_NAME}/"
-      - PLEX_UID=${USER_ID}
-      - PLEX_GID=${GROUP_ID}
+      - PUID=${USER_ID}
+      - PGID=${GROUP_ID}
+      - TZ=${TZ}
+      - JELLYFIN_PublishedServerUrl=https://jellyfin.${DOMAIN_NAME}/
+    devices:
+      - /dev/dri:/dev/dri #Required for jellyfin HW transcoding / QuickSync (Intel 8th gen or newer)
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/radarr/movies:/data/movies
-      - ./media/sonarr/series:/data/tvshows
-      - ./media/plex/config/:/config
-      - /tmp/transcode/:/transcode
+      - ./media/library:/library
+      - ./media/jellyfin/config/:/config
+    # ports:
+    #   - 8096:8096
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=plex"
-      - "traefik.docker.network=web"
-      - "traefik.frontend.rule=Host:plex.${DOMAIN_NAME}"
-      - "traefik.port=32400"
+      - "traefik.http.routers.jellyfin.rule=Host(`jellyfin.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.jellyfin.entrypoints=websecure"
+      - "traefik.http.routers.jellyfin.tls.certresolver=myresolver"
+      - "traefik.http.services.jellyfin.loadbalancer.server.port=8096"
     depends_on:
-      - transmission
+      - qbittorrent
       - sonarr
       - radarr
-
-  plexpy:
-    image: linuxserver/plexpy:latest
-    container_name: plexpy
-    networks:
-      - web
-    environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
-    volumes:
-      - ./media/plexpy:/config
-      - ./media/plex/config/Library/Application\ Support/Plex\ Media\ Server/Logs:/logs:ro
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=plexpy"
-      - "traefik.frontend.rule=Host:plexpy.${DOMAIN_NAME}"
-      - "traefik.port=8181"
-      - "traefik.docker.network=web"
-    depends_on:
-      - plex
-
-  transmission:
-    image: linuxserver/transmission:latest
-    container_name: transmission
-    networks:
-      - web
-    environment:
-      - PUID=${USER_ID}
-      - PGID=${GROUP_ID}
-    volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/transmission/config/:/config
-      - ./media/transmission/downloads/:/downloads
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=transmission"
-      - "traefik.frontend.rule=Host:transmission.${DOMAIN_NAME}"
-      - "traefik.port=9091"
-      - "traefik.docker.network=web"
+    restart: unless-stopped
 
   sonarr:
-    image: linuxserver/sonarr:latest
+    image: lscr.io/linuxserver/sonarr:latest
     container_name: sonarr
     networks:
       - web
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /dev/rtc:/dev/rtc:ro
-      - ./media/sonarr/series:/tv
       - ./media/sonarr/config:/config
-      - ./media/transmission/downloads/:/downloads
+      - ./media/:/media
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
+      - TZ=${TZ}
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=sonarr"
-      - "traefik.frontend.rule=Host:sonarr.${DOMAIN_NAME}"
-      - "traefik.port=8989"
-      - "traefik.docker.network=web"
+      - "traefik.http.routers.sonarr.rule=Host(`sonarr.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.sonarr.entrypoints=websecure"
+      - "traefik.http.routers.sonarr.tls.certresolver=myresolver"
     depends_on:
-      - transmission
+      - qbittorrent
+    restart: unless-stopped
 
   radarr:
-    image: linuxserver/radarr:latest
+    image: lscr.io/linuxserver/radarr:latest
     container_name: radarr
     networks:
       - web
     volumes:
-      - /etc/localtime:/etc/localtime:ro
       - /dev/rtc:/dev/rtc:ro
-      - ./media/radarr/movies:/movies
       - ./media/radarr/config:/config
-      - ./media/transmission/downloads/:/downloads
+      - ./media/:/media
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
+      - TZ=${TZ}
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=radarr"
-      - "traefik.frontend.rule=Host:radarr.${DOMAIN_NAME}"
-      - "traefik.port=7878"
-      - "traefik.docker.network=web"
+      - "traefik.http.routers.radarr.rule=Host(`radarr.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.radarr.entrypoints=websecure"
+      - "traefik.http.routers.radarr.tls.certresolver=myresolver"
     depends_on:
-      - transmission
+      - qbittorrent
+    restart: unless-stopped
 
-  # Proxy to a bunch of public trackers
-  jackett:
-    image: linuxserver/jackett:latest
-    container_name: jackett
-    networks:
-      - web
-    volumes:
-      - ./media/jackett/config/:/config
-      - ./media/transmission/downloads/:/downloads
+  qbittorrent:
+    image: lscr.io/linuxserver/qbittorrent:latest
+    container_name: qbittorrent
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
-    labels:
-      - "traefik.enable=true"
-      - "traefik.backend=jackett"
-      - "traefik.frontend.rule=Host:jackett.${DOMAIN_NAME}"
-      - "traefik.port=9117"
-      - "traefik.docker.network=web"
-
-  ombi:
-    image: linuxserver/ombi
-    container_name: ombi
-    restart: always
+      - TZ=${TZ}
+      - WEBUI_PORT=8080
+      - TORRENTING_PORT=8694 # port forward in router config
+      # - "ALL_PROXY=172.17.0.1:1080"  # enable to proxy traffic through a SOCKS5 proxy
+    volumes:
+      - ./media/qbittorrent/config:/config
+      - ./media/torrents:/media/torrents
     networks:
       - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.qbittorrent.rule=Host(`qbittorrent.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.qbittorrent.entrypoints=websecure"
+      - "traefik.http.routers.qbittorrent.tls.certresolver=myresolver"
+      - "traefik.http.services.qbittorrent.loadbalancer.server.port=8080"
+    restart: unless-stopped
+
+  # Prowlarr - manages your Sonarr, Radarr and download client
+  prowlarr:
+    image: lscr.io/linuxserver/prowlarr:latest
+    container_name: prowlarr
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
+      - TZ=${TZ}
     volumes:
-      - /etc/localtime:/etc/localtime:ro
-      - ./media/ombi/config:/config
+      - ./media/prowlarr/config:/config
+      - ./media/:/media
+    networks:
+      - web
+    # ports:
+    #   - 9696:9696
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=ombi"
-      - "traefik.frontend.rule=Host:ombi.${DOMAIN_NAME}"
-      - "traefik.port=3579"
-      - "traefik.docker.network=web"
+      - "traefik.http.routers.prowlarr.rule=Host(`prowlarr.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.prowlarr.entrypoints=websecure"
+      - "traefik.http.routers.prowlarr.tls.certresolver=myresolver"
+    restart: unless-stopped
+
+  # Flaresolerr - Used as a proxy server to bypass Cloudflare and DDoS-GUARD protection.
+  flaresolverr:
+    # DockerHub mirror flaresolverr/flaresolverr:latest
+    image: ghcr.io/flaresolverr/flaresolverr:latest
+    container_name: flaresolverr
+    environment:
+      - LOG_LEVEL=info
+      - LOG_HTML=false
+      - CAPTCHA_SOLVER=none
+      - TZ=${TZ}
+    # ports:
+    #   - 8191:8191
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.http.routers.flaresolverr.rule=Host(`flaresolverr.${DOMAIN_NAME}`)"
+      - "traefik.http.routers.flaresolverr.entrypoints=websecure"
+      - "traefik.http.routers.flaresolverr.tls.certresolver=myresolver"
+    restart: unless-stopped
 
 networks:
   web:
