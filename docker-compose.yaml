@@ -36,7 +36,8 @@ services:
     volumes:
       - /dev/rtc:/dev/rtc:ro
       - ./media/sonarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
+      - ./media/torrents:/media/torrents
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -58,7 +59,8 @@ services:
     volumes:
       - /dev/rtc:/dev/rtc:ro
       - ./media/radarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
+      - ./media/torrents:/media/torrents
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -81,7 +83,7 @@ services:
       - TZ=${TZ}
       - WEBUI_PORT=8080
       - TORRENTING_PORT=8694 # port forward in router config
-      # - "ALL_PROXY=172.17.0.1:1080"  # enable to proxy traffic through a SOCKS5 proxy
+      - "ALL_PROXY=172.17.0.1:1080"  # enable to proxy traffic through a SOCKS5 proxy
     volumes:
       - ./media/qbittorrent/config:/config
       - ./media/torrents:/media/torrents
@@ -105,7 +107,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ./media/prowlarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
     networks:
       - web
     # ports:

@@ -10,6 +10,7 @@ A media server configuration to run Jellyfin, Sonarr, Radarr, and qbittorrent in
 - create a `web` docker network with `docker network create web`
 - clone and setup [the reverse proxy](https://github.com/hkaj/reverse_proxy)
 - create a user for your media server, export its `$USER_ID` and `$GROUP_ID`.
+- if there's a mounted SMB volume, make that user part of the group that has permissions to write in it
 - set your TZ as an env var, using this [list](https://en.wikipedia.org/wiki/List_of_tz_database_time_zones#List), e.g. "Europe/Paris"
 - create a folder named `media` in this folder (`dockyard`) owned by $USER_ID:$GROUP_ID from your `media` user.
 - if you want to setup a VPN or SOCKS5 proxy to secure qbittorrent traffic, do that and uncomment the corresponding env var in the qbittorrent service
