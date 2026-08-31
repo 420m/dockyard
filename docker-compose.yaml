@@ -83,7 +83,7 @@ services:
       - TZ=${TZ}
       - WEBUI_PORT=8080
       - TORRENTING_PORT=8694 # port forward in router config
-      - "ALL_PROXY=172.17.0.1:1080"  # enable to proxy traffic through a SOCKS5 proxy
+      # - "ALL_PROXY=172.17.0.1:1080"  # enable to proxy traffic through a SOCKS5 proxy
     volumes:
       - ./media/qbittorrent/config:/config
       - ./media/torrents:/media/torrents
