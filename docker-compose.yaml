@@ -36,7 +36,8 @@ services:
     volumes:
       - /dev/rtc:/dev/rtc:ro
       - ./media/sonarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
+      - ./media/torrents:/media/torrents
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -58,7 +59,8 @@ services:
     volumes:
       - /dev/rtc:/dev/rtc:ro
       - ./media/radarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
+      - ./media/torrents:/media/torrents
     environment:
       - PUID=${USER_ID}
       - PGID=${GROUP_ID}
@@ -105,7 +107,7 @@ services:
       - TZ=${TZ}
     volumes:
       - ./media/prowlarr/config:/config
-      - ./media/:/media
+      - ./media/library:/media/library
     networks:
       - web
     # ports:
